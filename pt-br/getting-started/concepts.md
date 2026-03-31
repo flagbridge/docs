@@ -1,0 +1,119 @@
+---
+title: Conceitos Fundamentais
+description: "Entenda flags, ambientes, projetos, targeting e variantes no FlagBridge."
+---
+
+# Conceitos Fundamentais
+
+O FlagBridge organiza as feature flags em torno de alguns conceitos fundamentais. Entendê-los ajuda a projetar uma arquitetura de flags limpa.
+
+## Projetos
+
+Um **projeto** é o contêiner de nível mais alto. Normalmente, um projeto por aplicação ou serviço.
+
+```
+Projetos
+└── meu-app
+    ├── Ambientes (production, staging, development)
+    └── Flags (novo-checkout, modo-escuro, ...)
+```
+
+Cada projeto tem suas próprias API keys com escopo para ambientes específicos.
+
+## Ambientes
+
+**Ambientes** permitem controlar flags de forma independente em cada estágio do seu deploy. Todo projeto vem com três ambientes padrão:
+
+| Ambiente | Uso típico |
+|---|---|
+| `production` | Tráfego real |
+| `staging` | Testes pré-release |
+| `development` | Desenvolvimento local |
+
+Uma flag habilitada em `staging` é completamente independente da mesma flag em `production`. Isso permite testar flags com segurança antes de habilitá-las para usuários reais.
+
+## Flags
+
+Uma **flag** é um toggle nomeado booleano (ou multi-variante). Cada flag possui:
+
+- **Key** — identificador único usado no código (ex.: `novo-checkout`)
+- **Name** — rótulo legível por humanos
+- **Status** — habilitado ou desabilitado por ambiente
+- **Regras de targeting** — condições opcionais para rollouts parciais
+- **Variantes** — valores nomeados opcionais além de verdadeiro/falso
+
+### Chaves de flag
+
+As chaves de flag são imutáveis após a criação. Use kebab-case (`novo-checkout`, não `novoCheckout`).
+
+## Regras de targeting
+
+**Regras de targeting** permitem habilitar uma flag para um subconjunto de usuários sem habilitá-la para todos.
+
+As regras são avaliadas em ordem. A primeira regra correspondente vence.
+
+```
+Regra 1: userId IN [alice, bob]  → habilitado
+Regra 2: country = "BR"          → habilitado
+Padrão:                          → desabilitado
+```
+
+### Contexto
+
+O **contexto de avaliação** é o conjunto de atributos que você passa ao avaliar uma flag. Eles são comparados com suas regras de targeting.
+
+```json
+{
+  "userId": "user-123",
+  "email": "usuario@exemplo.com",
+  "country": "BR",
+  "plan": "pro",
+  "beta": true
+}
+```
+
+Qualquer atributo pode ser usado em regras de targeting. Atributos comuns: `userId`, `email`, `country`, `plan`, `orgId`.
+
+::: info
+Os atributos de contexto não são armazenados pelo FlagBridge a menos que você habilite analytics. Eles são usados apenas para avaliação de regras.
+:::
+
+## Rollouts por porcentagem
+
+**Rollouts por porcentagem** expõem gradualmente uma flag a uma porcentagem de usuários baseada em um hash consistente do ID do usuário.
+
+- Rollout de 10% → os mesmos 10% dos usuários sempre verão a flag habilitada
+- Aumentar de 10% para 20% adiciona usuários, nunca os remove (monotônico)
+
+## Variantes
+
+**Variantes** (flags multi-variantes) retornam um valor de string nomeado em vez de um simples booleano. Use-as para testes A/B ou valores de configuração.
+
+```json
+{
+  "flagKey": "cor-botao-checkout",
+  "variant": "verde",
+  "enabled": true
+}
+```
+
+Flags com variantes ainda têm um estado "habilitado" — se a flag estiver desabilitada, o SDK retorna a variante padrão.
+
+## Ordem de avaliação
+
+Ao avaliar uma flag, o FlagBridge aplica esta precedência:
+
+1. **Overrides de teste** — overrides por sessão para testes E2E (sempre vence)
+2. **Regras de targeting** — avaliadas em ordem, a primeira correspondência vence
+3. **Rollout por porcentagem** — aplicado se nenhuma regra de targeting correspondeu
+4. **Padrão** — o estado base habilitado/desabilitado da flag
+
+## Plugins **CE**
+
+**Plugins** estendem o FlagBridge com lógica de avaliação personalizada, integrações de analytics e mais. Os plugins podem:
+
+- Adicionar operadores de targeting personalizados
+- Emitir eventos de avaliação para ferramentas de analytics
+- Sincronizar o estado das flags de sistemas externos
+
+Consulte a [visão geral de Plugins](/pt-br/plugins/overview) para mais detalhes.
