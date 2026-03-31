@@ -1,0 +1,171 @@
+---
+title: Installation
+description: Self-hosted, SaaS, and Kubernetes deployment options for FlagBridge.
+---
+
+import { Tabs, TabItem, Aside, Badge } from '@astrojs/starlight/components';
+
+FlagBridge can be deployed in three ways: self-hosted via Docker, on FlagBridge Cloud (SaaS), or on Kubernetes with the official Helm chart.
+
+## Self-hosted (Docker Compose)
+
+The simplest self-hosted setup uses Docker Compose with PostgreSQL.
+
+```yaml
+# docker-compose.yml
+services:
+  flagbridge:
+    image: ghcr.io/flagbridge/flagbridge:latest
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://flagbridge:secret@db:5432/flagbridge
+      SECRET_KEY: change-me-in-production
+      # Optional: Redis for distributed evaluation cache
+      # REDIS_URL: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: flagbridge
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: flagbridge
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flagbridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+```
+
+```bash
+docker compose up -d
+
+# Run database migrations
+docker compose exec flagbridge flagbridge migrate
+
+# Check that it's running
+curl http://localhost:8080/health
+```
+
+<Aside type="caution">
+Change `SECRET_KEY` before deploying to production. Use a cryptographically random string of at least 32 characters.
+</Aside>
+
+## Environment variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `SECRET_KEY` | Yes | — | Secret for signing tokens |
+| `PORT` | No | `8080` | HTTP port to listen on |
+| `REDIS_URL` | No | — | Redis URL for distributed cache |
+| `LOG_LEVEL` | No | `info` | Log level (`debug`, `info`, `warn`, `error`) |
+| `LOG_FORMAT` | No | `json` | Log format (`json`, `text`) |
+| `CORS_ORIGINS` | No | `*` | Allowed CORS origins (comma-separated) |
+| `MAX_CONNECTIONS` | No | `25` | Max PostgreSQL connections |
+
+## Kubernetes (Helm) <Badge text="CE" variant="success" />
+
+Install with the official Helm chart:
+
+```bash
+helm repo add flagbridge https://charts.flagbridge.io
+helm repo update
+
+# Create a values file
+cat > flagbridge-values.yaml <<EOF
+image:
+  tag: latest
+
+config:
+  secretKey: "change-me-in-production"
+
+postgresql:
+  enabled: true
+  auth:
+    password: "change-me"
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: flags.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+EOF
+
+helm install flagbridge flagbridge/flagbridge \
+  --namespace flagbridge \
+  --create-namespace \
+  -f flagbridge-values.yaml
+```
+
+### Using an external database
+
+```yaml
+# flagbridge-values.yaml
+postgresql:
+  enabled: false
+
+config:
+  databaseUrl: "postgres://user:pass@your-db-host:5432/flagbridge"
+  secretKey: "change-me-in-production"
+```
+
+### High availability
+
+```yaml
+replicaCount: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+redis:
+  enabled: true
+```
+
+See the [Helm chart reference](https://github.com/flagbridge/helm-charts) for all available values.
+
+## FlagBridge Cloud (SaaS)
+
+FlagBridge Cloud is the fully managed option — no infrastructure to maintain.
+
+1. Sign up at [app.flagbridge.io](https://app.flagbridge.io)
+2. Create a project
+3. Copy your API key
+4. Point your SDK to `https://api.flagbridge.io`
+
+<Aside type="note">
+FlagBridge Cloud uses the same open-source core. Your data stays in your region.
+</Aside>
+
+## Upgrading
+
+```bash
+# Docker Compose
+docker compose pull
+docker compose up -d
+
+# Run any new migrations
+docker compose exec flagbridge flagbridge migrate
+```
+
+```bash
+# Helm
+helm repo update
+helm upgrade flagbridge flagbridge/flagbridge -f flagbridge-values.yaml
+```

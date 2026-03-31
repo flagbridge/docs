@@ -1,0 +1,60 @@
+---
+title: Integrations API
+description: Managed connectors for analytics and data platforms.
+---
+
+import { Badge } from '@astrojs/starlight/components';
+
+<Badge text="Pro" variant="note" /> The Integrations API manages pre-built connectors to popular analytics and data platforms.
+
+Unlike plugins (which run inside FlagBridge), integrations are managed connectors that use official platform APIs.
+
+**Auth:** Admin key required.
+
+## Available integrations
+
+| Integration | Category | Description |
+|---|---|---|
+| Mixpanel | Analytics | Track flag evaluations as Mixpanel events |
+| Amplitude | Analytics | Flag evaluation events as Amplitude events |
+| Segment | CDP | Flag evaluation traits and events |
+| Customer.io | Email/CRM | Segment users by flag state |
+| Datadog | Monitoring | Feature flag tracking in Datadog RUM |
+| Slack | Notifications | Notify Slack on flag changes |
+
+## GET /api/v1/projects/:projectSlug/integrations
+
+List configured integrations.
+
+```bash
+curl https://api.flagbridge.io/api/v1/projects/my-app/integrations \
+  -H "Authorization: Bearer fb_admin_YOUR_KEY"
+```
+
+## POST /api/v1/projects/:projectSlug/integrations
+
+Configure an integration.
+
+```bash
+curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/integrations \
+  -H "Authorization: Bearer fb_admin_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "mixpanel",
+    "config": {
+      "projectToken": "your-mixpanel-token",
+      "trackEvaluations": true,
+      "trackChanges": true
+    }
+  }'
+```
+
+## PATCH /api/v1/projects/:projectSlug/integrations/:integrationId
+
+Update integration config.
+
+## DELETE /api/v1/projects/:projectSlug/integrations/:integrationId
+
+Remove an integration.
+
+See the [Integrations guides](/integrations/mixpanel) for per-integration setup instructions.

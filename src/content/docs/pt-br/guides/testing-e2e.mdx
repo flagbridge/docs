@@ -1,0 +1,194 @@
+---
+title: Testes E2E com Feature Flags
+description: Teste feature flags na sua suíte de testes E2E com Playwright, Cypress e Vitest.
+---
+
+import { Tabs, TabItem, Aside, Badge } from '@astrojs/starlight/components';
+
+Um dos grandes diferenciais do FlagBridge é o suporte nativo a testes de feature flags na sua suíte E2E e de integração.
+
+A ideia central: cada teste cria uma **sessão isolada** com overrides específicos de flags. Esses overrides afetam apenas as requisições que incluem o token da sessão — todos os outros usuários e testes são completamente independentes.
+
+```
+Teste A (sessão: sess_A) → novo-checkout = true
+Teste B (sessão: sess_B) → novo-checkout = false
+Tráfego de produção     → novo-checkout = [avaliação real]
+```
+
+<Aside type="note">
+Você precisa de uma Test API key (`fb_test_`) para os endpoints de testing. Crie uma nas configurações do projeto ou via [API de Autenticação](/pt-br/api-reference/authentication).
+</Aside>
+
+## Como funciona
+
+1. Antes de cada teste, crie uma sessão via Testing API
+2. Defina overrides de flags para as flags que seu teste precisa
+3. Passe o token da sessão para sua aplicação (via cookie, header ou query param)
+4. Sua aplicação avalia as flags normalmente — mas recebe os valores sobrescritos
+5. Após o teste, destrua a sessão
+
+O token da sessão é passado pelo header `X-FlagBridge-Session`. O SDK do FlagBridge lê esse header automaticamente.
+
+---
+
+## Playwright
+
+### Configuração
+
+```bash
+pnpm add -D @flagbridge/sdk-node
+```
+
+Crie o arquivo `tests/fixtures/flags.ts`:
+
+```typescript
+// tests/fixtures/flags.ts
+import { test as base } from '@playwright/test';
+import { createTestingClient } from '@flagbridge/sdk-node/testing';
+
+type FlagFixtures = {
+  flags: {
+    override(flagKey: string, value: boolean | string): Promise<void>;
+    sessionToken: string;
+  };
+};
+
+const testClient = createTestingClient({
+  apiKey: process.env.FLAGBRIDGE_TEST_API_KEY!,
+  baseUrl: process.env.FLAGBRIDGE_BASE_URL ?? 'http://localhost:8080',
+});
+
+export const test = base.extend<FlagFixtures>({
+  flags: async ({ page }, use) => {
+    const session = await testClient.createSession();
+
+    await use({
+      override: (flagKey, value) => session.override(flagKey, value),
+      sessionToken: session.token,
+    });
+
+    await session.destroy();
+  },
+});
+
+export { expect } from '@playwright/test';
+```
+
+### Escrevendo testes
+
+```typescript
+// tests/checkout.spec.ts
+import { test, expect } from './fixtures/flags';
+
+test('exibe novo checkout quando flag está habilitada', async ({ page, flags }) => {
+  await flags.override('novo-checkout', true);
+
+  await page.setExtraHTTPHeaders({
+    'X-FlagBridge-Session': flags.sessionToken,
+  });
+
+  await page.goto('/checkout');
+
+  await expect(page.getByTestId('checkout-v2')).toBeVisible();
+  await expect(page.getByTestId('checkout-v1')).not.toBeVisible();
+});
+
+test('exibe checkout antigo quando flag está desabilitada', async ({ page, flags }) => {
+  await flags.override('novo-checkout', false);
+
+  await page.setExtraHTTPHeaders({
+    'X-FlagBridge-Session': flags.sessionToken,
+  });
+
+  await page.goto('/checkout');
+
+  await expect(page.getByTestId('checkout-v1')).toBeVisible();
+});
+
+test('teste A/B mostra variante correta', async ({ page, flags }) => {
+  await flags.override('cor-botao-checkout', 'verde');
+
+  await page.setExtraHTTPHeaders({
+    'X-FlagBridge-Session': flags.sessionToken,
+  });
+
+  await page.goto('/checkout');
+
+  const botao = page.getByRole('button', { name: 'Finalizar Compra' });
+  await expect(botao).toHaveCSS('background-color', 'rgb(34, 197, 94)');
+});
+```
+
+---
+
+## Vitest (testes de integração)
+
+```typescript
+// src/checkout/__tests__/checkout.test.ts
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { createTestingClient } from '@flagbridge/sdk-node/testing';
+import { createApp } from '../app';
+import request from 'supertest';
+
+const testClient = createTestingClient({
+  apiKey: process.env.FLAGBRIDGE_TEST_API_KEY!,
+  baseUrl: process.env.FLAGBRIDGE_BASE_URL ?? 'http://localhost:8080',
+});
+
+describe('GET /checkout', () => {
+  let session: Awaited<ReturnType<typeof testClient.createSession>>;
+
+  beforeEach(async () => {
+    session = await testClient.createSession();
+  });
+
+  afterEach(async () => {
+    await session.destroy();
+  });
+
+  it('renderiza novo checkout quando flag está habilitada', async () => {
+    await session.override('novo-checkout', true);
+
+    const app = createApp();
+    const res = await request(app)
+      .get('/checkout')
+      .set('X-FlagBridge-Session', session.token)
+      .set('Cookie', 'user_id=user-123');
+
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('data-testid="checkout-v2"');
+  });
+});
+```
+
+---
+
+## Configuração de CI/CD
+
+```yaml
+# GitHub Actions
+env:
+  FLAGBRIDGE_TEST_API_KEY: ${{ secrets.FLAGBRIDGE_TEST_API_KEY }}
+  FLAGBRIDGE_BASE_URL: http://localhost:8080
+```
+
+<Aside type="note">
+Sessões de teste expiram automaticamente após 1 hora. Em CI, crie e destrua uma sessão por teste — nunca use Admin keys ou Live keys no pipeline de testes.
+</Aside>
+
+---
+
+## Boas práticas
+
+- **Crie uma sessão por teste** — sessões são baratas e o isolamento evita testes flaky
+- **Sobrescreva apenas as flags que o teste precisa** — outras flags avaliam normalmente
+- **Destrua sessões no `afterEach`** — evita acúmulo por TTL
+- **Use Test keys no CI** — nunca use Admin ou Live keys no pipeline de testes
+- **Teste os dois estados da flag** — sempre escreva testes para habilitado e desabilitado
+- **Use atributos `data-testid`** — deixa as asserções independentes de mudanças de texto
+
+---
+
+## Referência da Testing API
+
+Veja a [referência completa da Testing API](/pt-br/api-reference/testing) para todos os endpoints.
