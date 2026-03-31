@@ -2,82 +2,55 @@
 
 ## What This Is
 
-The FlagBridge documentation site built with Starlight (Astro). Bilingual EN/PT-BR.
+The FlagBridge documentation site built with VitePress. Bilingual EN/PT-BR.
 
 - **Live:** docs.flagbridge.io
 - **Repo:** https://github.com/flagbridge/docs
-- **Deploy:** Cloudflare Pages
+- **Deploy:** Vercel
 
 ## Stack
 
 | Layer     | Tech                     |
 |-----------|--------------------------|
-| Framework | Starlight (Astro)        |
-| i18n      | Starlight native (EN default, PT-BR) |
-| Deploy    | Cloudflare Pages         |
-| Search    | Pagefind (built-in)      |
+| Framework | VitePress 1.6            |
+| i18n      | VitePress locales (EN root, PT-BR) |
+| Search    | VitePress local search   |
+| Deploy    | Vercel                   |
 
 ## Content Structure
 
 ```
 docs/
-├── getting-started/
-│   ├── quickstart.mdx         # Docker compose + first flag in 5 min
-│   ├── installation.mdx       # Self-hosted, SaaS, Kubernetes (Helm)
-│   └── concepts.mdx           # Flags, environments, projects, targeting
-├── guides/
-│   ├── targeting-rules.mdx
-│   ├── percentage-rollouts.mdx
-│   ├── testing-e2e.mdx        # Testing API with Playwright/Cypress examples
-│   ├── webhooks.mdx
-│   └── migrations.mdx         # From LaunchDarkly, Unleash, Flagsmith
-├── api-reference/
-│   ├── authentication.mdx     # API key scopes
-│   ├── flags.mdx              # CRUD endpoints
-│   ├── evaluation.mdx         # POST /evaluate, /evaluate/batch
-│   ├── testing.mdx            # Sessions, overrides
-│   ├── webhooks.mdx           # Registration, events, delivery
-│   ├── plugins.mdx            # Install, config, status
-│   ├── marketplace.mdx        # Listings, purchase (Pro)
-│   └── integrations.mdx       # Managed connectors (Pro)
-├── sdk/
-│   ├── node.mdx               # @flagbridge/sdk-node
-│   ├── react.mdx              # @flagbridge/sdk-react
-│   ├── go.mdx                 # @flagbridge/sdk-go
-│   ├── python.mdx             # @flagbridge/sdk-python
-│   └── openfeature.mdx        # @flagbridge/openfeature-provider
-├── plugins/
-│   ├── overview.mdx           # Plugin architecture
-│   ├── building-plugins.mdx   # Plugin SDK guide
-│   ├── publishing.mdx         # Marketplace submission
-│   └── plugin-sdk-reference.mdx
-└── integrations/
-    ├── mixpanel.mdx
-    ├── customer-io.mdx
-    ├── amplitude.mdx
-    ├── segment.mdx
-    ├── datadog.mdx
-    └── slack.mdx
+├── index.md                    # EN homepage
+├── getting-started/            # Quickstart, installation, concepts
+├── guides/                     # Targeting, rollouts, testing, webhooks, migrations
+├── api-reference/              # Auth, flags, evaluation, testing, webhooks, plugins, marketplace, integrations
+├── sdk/                        # Node, React, Go, Python, OpenFeature
+├── plugins/                    # Overview, building, publishing, SDK reference
+├── integrations/               # Mixpanel, Customer.io, Amplitude, Segment, Datadog, Slack
+└── pt-br/                      # Same structure, Portuguese translations
 ```
 
 ## Conventions
 
-- MDX format for all content (Astro components allowed)
+- Markdown (.md) format for all content
 - Every page must exist in both EN and PT-BR
-- Code examples must be copy-pasteable and tested
-- Use Starlight components: `<Tabs>`, `<TabItem>`, `<Aside>`, `<Card>`
+- Code examples must be copy-pasteable
+- Use VitePress containers: `::: info`, `::: warning`, `::: danger`, `::: tip`
+- Use VitePress code groups for multi-language examples: `::: code-group`
+- Badge CE/Pro features with bold text: **Pro**, **CE**
 - API reference pages should include request/response examples with curl + SDK
-- Badge CE/Pro features clearly: use `<Badge text="Pro" variant="note" />` or `<Badge text="CE" variant="success" />`
 
-## Priorities
+## Development
 
-1. Getting started guide (quickstart to first flag in 5 min)
-2. SDK docs (Node, React — most used)
-3. API reference (all 54 endpoints with examples)
-4. Testing E2E guide (key differentiator)
+```bash
+pnpm dev      # Start dev server
+pnpm build    # Production build
+pnpm preview  # Preview production build
+```
 
 ## Do NOT
 
 - Write English-only pages — always provide PT-BR translation
 - Use code examples that won't actually work
-- Skip the Pro/CE badge on feature-gated content
+- Skip the Pro/CE label on feature-gated content

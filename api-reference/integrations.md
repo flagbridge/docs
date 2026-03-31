@@ -22,21 +22,21 @@ Unlike plugins (which run inside FlagBridge), integrations are managed connector
 | Datadog | Monitoring | Feature flag tracking in Datadog RUM |
 | Slack | Notifications | Notify Slack on flag changes |
 
-## GET /api/v1/projects/:projectSlug/integrations
+## GET /v1/projects/:projectSlug/integrations
 
 List configured integrations.
 
 ```bash
-curl https://api.flagbridge.io/api/v1/projects/my-app/integrations \
+curl https://api.flagbridge.io/v1/projects/my-app/integrations \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
-## POST /api/v1/projects/:projectSlug/integrations
+## POST /v1/projects/:projectSlug/integrations
 
 Configure an integration.
 
 ```bash
-curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/integrations \
+curl -X POST https://api.flagbridge.io/v1/projects/my-app/integrations \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -49,11 +49,11 @@ curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/integrations \
   }'
 ```
 
-## PATCH /api/v1/projects/:projectSlug/integrations/:integrationId
+## PATCH /v1/projects/:projectSlug/integrations/:integrationId
 
 Update integration config.
 
-## DELETE /api/v1/projects/:projectSlug/integrations/:integrationId
+## DELETE /v1/projects/:projectSlug/integrations/:integrationId
 
 Remove an integration.
 

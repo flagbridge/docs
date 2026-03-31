@@ -9,12 +9,12 @@ description: Browse and install plugins from the FlagBridge marketplace.
 
 **Auth:** Admin key required.
 
-## GET /api/v1/marketplace/plugins
+## GET /v1/marketplace/plugins
 
 List available plugins in the marketplace.
 
 ```bash
-curl https://api.flagbridge.io/api/v1/marketplace/plugins \
+curl https://api.flagbridge.io/v1/marketplace/plugins \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
@@ -43,21 +43,21 @@ curl https://api.flagbridge.io/api/v1/marketplace/plugins \
 }
 ```
 
-## GET /api/v1/marketplace/plugins/:packageName
+## GET /v1/marketplace/plugins/:packageName
 
 Get details about a specific marketplace plugin.
 
 ```bash
-curl "https://api.flagbridge.io/api/v1/marketplace/plugins/%40flagbridge%2Fplugin-mixpanel" \
+curl "https://api.flagbridge.io/v1/marketplace/plugins/%40flagbridge%2Fplugin-mixpanel" \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
-## GET /api/v1/marketplace/plugins/:packageName/versions
+## GET /v1/marketplace/plugins/:packageName/versions
 
 List available versions of a plugin.
 
 ```bash
-curl "https://api.flagbridge.io/api/v1/marketplace/plugins/%40flagbridge%2Fplugin-mixpanel/versions" \
+curl "https://api.flagbridge.io/v1/marketplace/plugins/%40flagbridge%2Fplugin-mixpanel/versions" \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 

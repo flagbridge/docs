@@ -11,12 +11,12 @@ This is the foundation of FlagBridge's E2E testing support. See the [E2E testing
 
 **Auth:** Test key or Admin key required for all testing endpoints.
 
-## POST /api/v1/testing/sessions
+## POST /v1/testing/sessions
 
 Create a new test session.
 
 ```
-POST /api/v1/testing/sessions
+POST /v1/testing/sessions
 Authorization: Bearer fb_test_YOUR_KEY
 Content-Type: application/json
 ```
@@ -52,12 +52,12 @@ The `token` is what you pass in the `X-FlagBridge-Session` header on evaluation 
 
 ---
 
-## POST /api/v1/testing/sessions/:id/overrides
+## POST /v1/testing/sessions/:id/overrides
 
 Set or update flag overrides for a session.
 
 ```
-POST /api/v1/testing/sessions/sess_abc123/overrides
+POST /v1/testing/sessions/sess_abc123/overrides
 Authorization: Bearer fb_test_YOUR_KEY
 Content-Type: application/json
 ```
@@ -93,23 +93,23 @@ Each key is a flag key. Values can be:
 
 ---
 
-## GET /api/v1/testing/sessions/:id
+## GET /v1/testing/sessions/:id
 
 Get the current state of a session.
 
 ```bash
-curl https://api.flagbridge.io/api/v1/testing/sessions/sess_abc123 \
+curl https://api.flagbridge.io/v1/testing/sessions/sess_abc123 \
   -H "Authorization: Bearer fb_test_YOUR_KEY"
 ```
 
 ---
 
-## DELETE /api/v1/testing/sessions/:id
+## DELETE /v1/testing/sessions/:id
 
 Destroy a session before its TTL expires.
 
 ```bash
-curl -X DELETE https://api.flagbridge.io/api/v1/testing/sessions/sess_abc123 \
+curl -X DELETE https://api.flagbridge.io/v1/testing/sessions/sess_abc123 \
   -H "Authorization: Bearer fb_test_YOUR_KEY"
 ```
 
@@ -122,7 +122,7 @@ Returns `204 No Content`.
 Pass the session token in the `X-FlagBridge-Session` header on any evaluation request:
 
 ```bash
-curl -X POST https://api.flagbridge.io/api/v1/evaluate \
+curl -X POST https://api.flagbridge.io/v1/evaluate \
   -H "Authorization: Bearer fb_test_YOUR_KEY" \
   -H "X-FlagBridge-Session: sess_abc123_xxxxxxxxxxx" \
   -H "Content-Type: application/json" \

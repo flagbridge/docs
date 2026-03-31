@@ -19,12 +19,12 @@ FlagBridge can send webhook events to your endpoints when flags change.
 | `flag.enabled` | A flag was enabled |
 | `flag.disabled` | A flag was disabled |
 
-## POST /api/v1/projects/:projectSlug/webhooks
+## POST /v1/projects/:projectSlug/webhooks
 
 Register a webhook endpoint.
 
 ```bash
-curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/webhooks \
+curl -X POST https://api.flagbridge.io/v1/projects/my-app/webhooks \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -103,10 +103,10 @@ After 4 failed retries, the event is marked as failed and no further attempts ar
 
 ```bash
 # List recent deliveries
-curl https://api.flagbridge.io/api/v1/webhooks/wh_abc123/deliveries \
+curl https://api.flagbridge.io/v1/webhooks/wh_abc123/deliveries \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 
 # Redeliver a failed event
-curl -X POST https://api.flagbridge.io/api/v1/webhook-deliveries/del_abc123/redeliver \
+curl -X POST https://api.flagbridge.io/v1/webhook-deliveries/del_abc123/redeliver \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```

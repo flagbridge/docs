@@ -1,18 +1,27 @@
 # FlagBridge Documentation
 
-Official documentation for [FlagBridge](https://github.com/flagbridge/flagbridge) — feature flags with product intelligence.
+Official documentation for [FlagBridge](https://flagbridge.io) — feature flags with product intelligence.
+
+**Live:** [docs.flagbridge.io](https://docs.flagbridge.io)
 
 ## Stack
 
-- [Docusaurus](https://docusaurus.io/) (planned)
+- [VitePress](https://vitepress.dev/) (Vue-powered static site generator)
 - Bilingual: English and Portuguese (PT-BR)
+- Deploy: Vercel
 
 ## Development
 
 ```bash
-# Coming soon
 pnpm install
 pnpm dev
+```
+
+## Build
+
+```bash
+pnpm build
+pnpm preview
 ```
 
 ## Contributing

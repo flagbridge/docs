@@ -7,14 +7,14 @@ description: POST /evaluate and /evaluate/batch — evaluate feature flags for a
 
 The evaluation endpoints are the core of FlagBridge. They determine whether a flag is enabled for a given user context.
 
-## POST /api/v1/evaluate
+## POST /v1/evaluate
 
 Evaluate a single flag.
 
 **Auth:** Live key, Test key, or Admin key
 
 ```
-POST /api/v1/evaluate
+POST /v1/evaluate
 Authorization: Bearer fb_live_YOUR_KEY
 Content-Type: application/json
 ```
@@ -78,7 +78,7 @@ Content-Type: application/json
 ::: code-group
 
 ```bash [curl]
-curl -X POST https://api.flagbridge.io/api/v1/evaluate \
+curl -X POST https://api.flagbridge.io/v1/evaluate \
   -H "Authorization: Bearer fb_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -101,14 +101,14 @@ const result = await client.evaluate('new-checkout-flow', {
 
 ---
 
-## POST /api/v1/evaluate/batch
+## POST /v1/evaluate/batch
 
 Evaluate multiple flags in a single request. More efficient than multiple individual requests.
 
 **Auth:** Live key, Test key, or Admin key
 
 ```
-POST /api/v1/evaluate/batch
+POST /v1/evaluate/batch
 Authorization: Bearer fb_live_YOUR_KEY
 Content-Type: application/json
 ```
@@ -163,7 +163,7 @@ Content-Type: application/json
 ::: code-group
 
 ```bash [curl]
-curl -X POST https://api.flagbridge.io/api/v1/evaluate/batch \
+curl -X POST https://api.flagbridge.io/v1/evaluate/batch \
   -H "Authorization: Bearer fb_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -193,7 +193,7 @@ Batch evaluation uses a single network round-trip. Prefer it over multiple `eval
 When running E2E tests, pass the session token as a header to apply test overrides:
 
 ```bash
-curl -X POST https://api.flagbridge.io/api/v1/evaluate \
+curl -X POST https://api.flagbridge.io/v1/evaluate \
   -H "Authorization: Bearer fb_test_YOUR_KEY" \
   -H "X-FlagBridge-Session: sess_abc123" \
   -H "Content-Type: application/json" \

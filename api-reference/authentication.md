@@ -24,7 +24,7 @@ Never expose `fb_admin_` keys in client-side code or public repositories. Use `f
 ## Making authenticated requests
 
 ```bash
-curl https://api.flagbridge.io/api/v1/projects \
+curl https://api.flagbridge.io/v1/projects \
   -H "Authorization: Bearer fb_admin_YOUR_KEY_HERE"
 ```
 
@@ -34,16 +34,16 @@ All requests must use HTTPS. HTTP requests are rejected in production.
 
 ### Live key (`fb_live_`)
 
-- `POST /api/v1/evaluate`
-- `POST /api/v1/evaluate/batch`
+- `POST /v1/evaluate`
+- `POST /v1/evaluate/batch`
 
 ### Test key (`fb_test_`)
 
 All live key endpoints, plus:
 
-- `POST /api/v1/testing/sessions`
-- `POST /api/v1/testing/sessions/:id/overrides`
-- `DELETE /api/v1/testing/sessions/:id`
+- `POST /v1/testing/sessions`
+- `POST /v1/testing/sessions/:id/overrides`
+- `DELETE /v1/testing/sessions/:id`
 
 ### Admin key (`fb_admin_`)
 
@@ -53,11 +53,11 @@ Full access to all endpoints.
 
 ```bash
 # List API keys for a project
-curl https://api.flagbridge.io/api/v1/projects/my-app/api-keys \
+curl https://api.flagbridge.io/v1/projects/my-app/api-keys \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 
 # Create a new live key
-curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/api-keys \
+curl -X POST https://api.flagbridge.io/v1/projects/my-app/api-keys \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -67,11 +67,11 @@ curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/api-keys \
   }'
 
 # Rotate an existing key
-curl -X POST https://api.flagbridge.io/api/v1/api-keys/key_abc123/rotate \
+curl -X POST https://api.flagbridge.io/v1/api-keys/key_abc123/rotate \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 
 # Revoke a key
-curl -X DELETE https://api.flagbridge.io/api/v1/api-keys/key_abc123 \
+curl -X DELETE https://api.flagbridge.io/v1/api-keys/key_abc123 \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 

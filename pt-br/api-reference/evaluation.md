@@ -7,7 +7,7 @@ description: "POST /evaluate e /evaluate/batch — avalie feature flags para um 
 
 Os endpoints de avaliação são o núcleo do FlagBridge. Eles determinam se uma flag está habilitada para um dado contexto de usuário.
 
-## POST /api/v1/evaluate
+## POST /v1/evaluate
 
 Avalia uma única flag.
 
@@ -55,7 +55,7 @@ Avalia uma única flag.
 
 ::: code-group
 ```bash [curl]
-curl -X POST https://api.flagbridge.io/api/v1/evaluate \
+curl -X POST https://api.flagbridge.io/v1/evaluate \
   -H "Authorization: Bearer fb_live_SUA_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -74,7 +74,7 @@ const resultado = await client.evaluate('novo-checkout', {
 
 ---
 
-## POST /api/v1/evaluate/batch
+## POST /v1/evaluate/batch
 
 Avalia múltiplas flags em uma única requisição.
 

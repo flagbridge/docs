@@ -1,8 +1,11 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'FlagBridge | Docs',
+  title: 'FlagBridge',
   description: 'Feature flags with product intelligence.',
+  head: [
+    ['link', { rel: 'icon', type: 'image/png', href: '/favicon.png' }],
+  ],
 
   locales: {
     root: {

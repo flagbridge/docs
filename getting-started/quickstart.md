@@ -54,7 +54,7 @@ FlagBridge will be available at `http://localhost:8080`.
 
 ```bash
 # Create your first project
-curl -X POST http://localhost:8080/api/v1/projects \
+curl -X POST http://localhost:8080/v1/projects \
   -H "Content-Type: application/json" \
   -d '{"name": "my-app", "slug": "my-app"}'
 
@@ -66,7 +66,7 @@ Or open `http://localhost:8080` in your browser and use the setup wizard.
 ## 3. Create your first flag
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/projects/my-app/flags \
+curl -X POST http://localhost:8080/v1/projects/my-app/flags \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -134,7 +134,7 @@ function CheckoutPage() {
 ```
 
 ```bash [curl]
-curl -X POST http://localhost:8080/api/v1/evaluate \
+curl -X POST http://localhost:8080/v1/evaluate \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -161,7 +161,7 @@ Response:
 ## 5. Enable the flag
 
 ```bash
-curl -X PATCH http://localhost:8080/api/v1/projects/my-app/flags/new-checkout-flow \
+curl -X PATCH http://localhost:8080/v1/projects/my-app/flags/new-checkout-flow \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"enabled": true}'

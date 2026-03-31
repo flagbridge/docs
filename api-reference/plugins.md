@@ -9,12 +9,12 @@ description: Install, configure, and check the status of FlagBridge plugins.
 
 **Auth:** Admin key required.
 
-## GET /api/v1/projects/:projectSlug/plugins
+## GET /v1/projects/:projectSlug/plugins
 
 List installed plugins.
 
 ```bash
-curl https://api.flagbridge.io/api/v1/projects/my-app/plugins \
+curl https://api.flagbridge.io/v1/projects/my-app/plugins \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
@@ -33,12 +33,12 @@ curl https://api.flagbridge.io/api/v1/projects/my-app/plugins \
 }
 ```
 
-## POST /api/v1/projects/:projectSlug/plugins
+## POST /v1/projects/:projectSlug/plugins
 
 Install a plugin from the marketplace.
 
 ```bash
-curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/plugins \
+curl -X POST https://api.flagbridge.io/v1/projects/my-app/plugins \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -50,23 +50,23 @@ curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/plugins \
   }'
 ```
 
-## PATCH /api/v1/projects/:projectSlug/plugins/:pluginId
+## PATCH /v1/projects/:projectSlug/plugins/:pluginId
 
 Update plugin configuration.
 
 ```bash
-curl -X PATCH https://api.flagbridge.io/api/v1/projects/my-app/plugins/plugin_abc123 \
+curl -X PATCH https://api.flagbridge.io/v1/projects/my-app/plugins/plugin_abc123 \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"config": {"projectToken": "new-token"}}'
 ```
 
-## DELETE /api/v1/projects/:projectSlug/plugins/:pluginId
+## DELETE /v1/projects/:projectSlug/plugins/:pluginId
 
 Uninstall a plugin.
 
 ```bash
-curl -X DELETE https://api.flagbridge.io/api/v1/projects/my-app/plugins/plugin_abc123 \
+curl -X DELETE https://api.flagbridge.io/v1/projects/my-app/plugins/plugin_abc123 \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
@@ -83,7 +83,7 @@ Returns `204 No Content`.
 
 ```bash
 # Get plugin status and recent logs
-curl https://api.flagbridge.io/api/v1/projects/my-app/plugins/plugin_abc123/status \
+curl https://api.flagbridge.io/v1/projects/my-app/plugins/plugin_abc123/status \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 

@@ -28,12 +28,12 @@ Flag management endpoints for creating, reading, updating, and deleting feature 
 
 ---
 
-## GET /api/v1/projects/:projectSlug/flags
+## GET /v1/projects/:projectSlug/flags
 
 List all flags in a project (for the current environment).
 
 ```bash
-curl https://api.flagbridge.io/api/v1/projects/my-app/flags \
+curl https://api.flagbridge.io/v1/projects/my-app/flags \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
@@ -60,23 +60,23 @@ curl https://api.flagbridge.io/api/v1/projects/my-app/flags \
 
 ---
 
-## GET /api/v1/projects/:projectSlug/flags/:flagKey
+## GET /v1/projects/:projectSlug/flags/:flagKey
 
 Get a single flag by key.
 
 ```bash
-curl https://api.flagbridge.io/api/v1/projects/my-app/flags/new-checkout-flow \
+curl https://api.flagbridge.io/v1/projects/my-app/flags/new-checkout-flow \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
 ---
 
-## POST /api/v1/projects/:projectSlug/flags
+## POST /v1/projects/:projectSlug/flags
 
 Create a new flag.
 
 ```bash
-curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/flags \
+curl -X POST https://api.flagbridge.io/v1/projects/my-app/flags \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -99,12 +99,12 @@ curl -X POST https://api.flagbridge.io/api/v1/projects/my-app/flags \
 
 ---
 
-## PATCH /api/v1/projects/:projectSlug/flags/:flagKey
+## PATCH /v1/projects/:projectSlug/flags/:flagKey
 
 Update a flag's settings.
 
 ```bash
-curl -X PATCH https://api.flagbridge.io/api/v1/projects/my-app/flags/new-checkout-flow \
+curl -X PATCH https://api.flagbridge.io/v1/projects/my-app/flags/new-checkout-flow \
   -H "Authorization: Bearer fb_admin_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,12 +129,12 @@ Sending `rules` replaces all existing targeting rules. To append a single rule, 
 
 ---
 
-## DELETE /api/v1/projects/:projectSlug/flags/:flagKey
+## DELETE /v1/projects/:projectSlug/flags/:flagKey
 
 Delete a flag permanently.
 
 ```bash
-curl -X DELETE https://api.flagbridge.io/api/v1/projects/my-app/flags/new-checkout-flow \
+curl -X DELETE https://api.flagbridge.io/v1/projects/my-app/flags/new-checkout-flow \
   -H "Authorization: Bearer fb_admin_YOUR_KEY"
 ```
 
