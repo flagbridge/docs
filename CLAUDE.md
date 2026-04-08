@@ -1,56 +1,39 @@
-# CLAUDE.md — FlagBridge Documentation Site
+# CLAUDE.md — FlagBridge Docs
 
-## What This Is
+> Copiar pra: flagbridge/docs/CLAUDE.md
 
-The FlagBridge documentation site built with VitePress. Bilingual EN/PT-BR.
+## O que é
 
-- **Live:** docs.flagbridge.io
-- **Repo:** https://github.com/flagbridge/docs
-- **Deploy:** Vercel
+Documentação do FlagBridge. VitePress (Vue), bilíngue EN + PT-BR.
 
 ## Stack
 
-| Layer     | Tech                     |
-|-----------|--------------------------|
-| Framework | VitePress 1.6            |
-| i18n      | VitePress locales (EN root, PT-BR) |
-| Search    | VitePress local search   |
-| Deploy    | Vercel                   |
+VitePress (Vue), i18n built-in, MiniSearch. Deploy: **Vercel**.
 
-## Content Structure
+## Estrutura
 
 ```
-docs/
-├── index.md                    # EN homepage
-├── getting-started/            # Quickstart, installation, concepts
-├── guides/                     # Targeting, rollouts, testing, webhooks, migrations
-├── api-reference/              # Auth, flags, evaluation, testing, webhooks, plugins, marketplace, integrations
-├── sdk/                        # Node, React, Go, Python, OpenFeature
-├── plugins/                    # Overview, building, publishing, SDK reference
-├── integrations/               # Mixpanel, Customer.io, Amplitude, Segment, Datadog, Slack
-└── pt-br/                      # Same structure, Portuguese translations
+getting-started/   → quickstart, installation, concepts
+guides/            → targeting, rollouts, testing E2E, webhooks, migrations
+api-reference/     → auth, flags, evaluation, testing, webhooks, plugins, marketplace, integrations
+sdk/               → node, react, go, python, openfeature
+plugins/           → overview, building, publishing, SDK reference
+integrations/      → mixpanel, customer-io, amplitude, segment, datadog, slack
+compare/           → vs-launchdarkly, vs-growthbook, vs-unleash
 ```
 
-## Conventions
+## Convenções
 
-- Markdown (.md) format for all content
-- Every page must exist in both EN and PT-BR
-- Code examples must be copy-pasteable
-- Use VitePress containers: `::: info`, `::: warning`, `::: danger`, `::: tip`
-- Use VitePress code groups for multi-language examples: `::: code-group`
-- Badge CE/Pro features with bold text: **Pro**, **CE**
-- API reference pages should include request/response examples with curl + SDK
+- Toda página em EN e PT-BR
+- Code examples copy-pasteable e testados
+- Code groups pra multi-language: ::: code-group
+- Custom containers: ::: tip, ::: warning, ::: danger
+- Badges CE/Pro: ::: info CE e ::: warning Pro
+- Termos técnicos não traduzem (flag, environment, targeting, rollout)
+- Getting started: zero to first flag em 5 minutos
 
-## Development
+## NÃO faça
 
-```bash
-pnpm dev      # Start dev server
-pnpm build    # Production build
-pnpm preview  # Preview production build
-```
-
-## Do NOT
-
-- Write English-only pages — always provide PT-BR translation
-- Use code examples that won't actually work
-- Skip the Pro/CE label on feature-gated content
+- Não escreva páginas English-only
+- Não use code examples que não funcionam
+- Não pule badge CE/Pro em features gated
