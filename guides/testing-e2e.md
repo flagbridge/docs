@@ -1,219 +1,201 @@
 ---
 title: E2E Testing with Feature Flags
-description: Test feature flags in your end-to-end test suite with Playwright, Cypress, and Vitest.
+description: Use FlagBridge's built-in Testing API to run isolated, deterministic E2E tests without mocking or environment duplication.
 ---
 
 # E2E Testing with Feature Flags
 
-One of FlagBridge's key differentiators is first-class support for testing feature flags in your E2E and integration test suite.
+Testing feature-flagged code is a known pain point. Most tools force you to either mock the flag SDK, spin up a separate environment, or write conditional test logic that mirrors your flag state. FlagBridge was designed with a different approach.
 
-The core idea: each test creates an **isolated session** with specific flag overrides. These overrides only affect requests that include the session token — all other users and tests are unaffected.
+## Why FlagBridge's Testing API is different
 
-```
-Test A (session: sess_A) → new-checkout-flow = true
-Test B (session: sess_B) → new-checkout-flow = false
-Production traffic      → new-checkout-flow = [real evaluation]
-```
+Every major flag platform handles test isolation differently — and most handle it poorly.
 
-::: info
-You need a Test API key (`fb_test_`) for the testing endpoints. Create one in your project settings or via the [Authentication API](/api-reference/authentication).
+| Platform | Testing approach | Problem |
+|---|---|---|
+| **LaunchDarkly** | No native testing API | You must mock the SDK client in unit tests; E2E requires a dedicated test environment with flags pre-configured via the dashboard |
+| **Unleash** | Environment-scoped flag states | No per-test isolation; any flag change affects all traffic hitting that environment during your test run |
+| **GrowthBook** | `forcedVariations` SDK option | Works for unit tests; E2E requires custom wrapper setup, manual cleanup, and in-process overrides that bypass network calls |
+| **FlagBridge** | Isolated sessions built into the API | Each test gets its own session token. Overrides are scoped to that token — no other user, test, or environment is affected |
+
+FlagBridge's Testing API issues a session token per test run. Any evaluation request that carries that token resolves the overrides you define — ignoring targeting rules, rollout percentages, and the flag's default state. All other traffic is completely unaffected.
+
+::: tip Why this matters
+You can run parallel test suites against the same FlagBridge instance without test interference. No dedicated test environments to maintain, no SDK mocking to keep in sync with production behavior.
 :::
 
 ## How it works
 
-1. Before each test, create a session via the Testing API
-2. Set flag overrides for the specific flags your test needs
-3. Pass the session token to your app (via cookie, header, or query param)
-4. Your app evaluates flags normally — but gets the overridden values
-5. After the test, destroy the session
+The lifecycle of a test session is four steps:
 
-The session token is passed through your app in `X-FlagBridge-Session` header. The FlagBridge SDK reads this header automatically.
+```
+1. Create session  →  POST /v1/testing/sessions
+                       Returns a session ID + token
+
+2. Set overrides   →  PUT /v1/testing/sessions/{id}/overrides/{flagKey}
+                       Map a flag key to the value you want for this test
+
+3. Run tests       →  Pass X-FlagBridge-Session: {token} on each request
+                       Flag evaluations resolve your overrides instead of real rules
+
+4. Cleanup         →  DELETE /v1/testing/sessions/{id}
+                       (or let the TTL expire automatically)
+```
+
+Sessions default to a 1-hour TTL. If your test runner finishes early, destroy the session explicitly in `afterAll` or teardown hooks.
+
+::: info CE
+Basic sessions (create, set override, destroy) are available in Community Edition.
+:::
+
+::: warning Pro
+TTL control, batch overrides, and per-session metrics are Pro features.
+:::
 
 ---
 
 ## Playwright
 
-### Setup
-
-Install the helper:
-
-```bash
-pnpm add -D @flagbridge/sdk-node
-```
-
-Create a `fixtures/flags.ts` file:
+### Full test example
 
 ```typescript
-// tests/fixtures/flags.ts
-import { test as base } from '@playwright/test';
-import { createTestingClient } from '@flagbridge/sdk-node/testing';
+import { test, expect } from '@playwright/test';
+import { FlagBridge } from '@flagbridge/sdk-node';
 
-type FlagFixtures = {
-  flags: {
-    override(flagKey: string, value: boolean | string): Promise<void>;
-    sessionToken: string;
-  };
-};
-
-const testClient = createTestingClient({
-  apiKey: process.env.FLAGBRIDGE_TEST_API_KEY!,
-  baseUrl: process.env.FLAGBRIDGE_BASE_URL ?? 'http://localhost:8080',
+const fb = new FlagBridge({
+  apiKey: 'fb_sk_test_...',
+  baseUrl: 'http://localhost:8080',
 });
 
-export const test = base.extend<FlagFixtures>({
-  flags: async ({ page }, use) => {
-    const session = await testClient.createSession();
+test.describe('New checkout flow', () => {
+  let sessionId: string;
 
-    await use({
-      override: (flagKey, value) => session.override(flagKey, value),
-      sessionToken: session.token,
+  test.beforeAll(async () => {
+    const session = await fb.testing.createSession({
+      projectId: 'my-project-id',
+      label: 'checkout-e2e',
     });
+    sessionId = session.id;
 
-    // Pass the session token to the app via header
+    await fb.testing.setOverride(sessionId, {
+      flagKey: 'new-checkout',
+      value: true,
+    });
+  });
+
+  test.afterAll(async () => {
+    await fb.testing.destroySession(sessionId);
+  });
+
+  test('shows new checkout when flag enabled', async ({ page }) => {
+    // Pass the session token via header so the app's SDK resolves overrides
     await page.setExtraHTTPHeaders({
-      'X-FlagBridge-Session': session.token,
+      'X-FlagBridge-Session': sessionId,
     });
 
-    await session.destroy();
-  },
-});
+    await page.goto('/checkout');
+    await expect(page.locator('.new-checkout')).toBeVisible();
+  });
 
-export { expect } from '@playwright/test';
+  test('hides legacy checkout when flag enabled', async ({ page }) => {
+    await page.setExtraHTTPHeaders({
+      'X-FlagBridge-Session': sessionId,
+    });
+
+    await page.goto('/checkout');
+    await expect(page.locator('.legacy-checkout')).not.toBeVisible();
+  });
+});
 ```
 
-::: warning
-Call `page.setExtraHTTPHeaders` before navigating to any page so every request includes the session token.
+::: tip Forwarding the session header in your app
+Your server must forward the `X-FlagBridge-Session` header from incoming requests to the FlagBridge evaluation call. The Node.js SDK picks this up automatically when you pass request headers through the evaluation context.
 :::
 
-### Writing tests
+### Playwright global setup
+
+For large test suites, create sessions in a global setup file and tear them down in global teardown. This avoids per-test HTTP overhead when all tests share the same flag configuration.
 
 ```typescript
-// tests/checkout.spec.ts
-import { test, expect } from './fixtures/flags';
+// playwright/global-setup.ts
+import { FlagBridge } from '@flagbridge/sdk-node';
 
-test('new checkout flow is shown when flag is enabled', async ({ page, flags }) => {
-  await flags.override('new-checkout-flow', true);
-
-  // Set the header before navigation
-  await page.setExtraHTTPHeaders({
-    'X-FlagBridge-Session': flags.sessionToken,
-  });
-
-  await page.goto('/checkout');
-
-  await expect(page.getByTestId('checkout-v2')).toBeVisible();
-  await expect(page.getByTestId('checkout-v1')).not.toBeVisible();
+const fb = new FlagBridge({
+  apiKey: process.env.FLAGBRIDGE_TEST_KEY!,
+  baseUrl: process.env.FLAGBRIDGE_URL!,
 });
 
-test('old checkout flow is shown when flag is disabled', async ({ page, flags }) => {
-  await flags.override('new-checkout-flow', false);
-
-  await page.setExtraHTTPHeaders({
-    'X-FlagBridge-Session': flags.sessionToken,
+export default async function globalSetup() {
+  const session = await fb.testing.createSession({
+    projectId: process.env.FLAGBRIDGE_PROJECT_ID!,
+    label: 'playwright-run',
   });
 
-  await page.goto('/checkout');
-
-  await expect(page.getByTestId('checkout-v1')).toBeVisible();
-});
-
-test('A/B test shows correct variant', async ({ page, flags }) => {
-  await flags.override('checkout-button-color', 'green');
-
-  await page.setExtraHTTPHeaders({
-    'X-FlagBridge-Session': flags.sessionToken,
-  });
-
-  await page.goto('/checkout');
-
-  const button = page.getByRole('button', { name: 'Complete Purchase' });
-  await expect(button).toHaveCSS('background-color', 'rgb(34, 197, 94)');
-});
+  // Store the session ID so tests can read it via process.env
+  process.env.FLAGBRIDGE_SESSION_ID = session.id;
+}
 ```
 
-### Using cookies instead of headers
-
-If your app reads the session token from a cookie instead of a header, set it with `page.context().addCookies()`:
-
 ```typescript
-// After creating the session
-await page.context().addCookies([{
-  name: 'flagbridge_session',
-  value: session.token,
-  domain: 'localhost',
-  path: '/',
-}]);
-```
+// playwright/global-teardown.ts
+import { FlagBridge } from '@flagbridge/sdk-node';
 
-Update your app's FlagBridge middleware to read from the cookie:
+const fb = new FlagBridge({
+  apiKey: process.env.FLAGBRIDGE_TEST_KEY!,
+  baseUrl: process.env.FLAGBRIDGE_URL!,
+});
 
-```typescript
-// Express middleware
-app.use((req, res, next) => {
-  const sessionToken =
-    req.headers['x-flagbridge-session'] as string ||
-    req.cookies['flagbridge_session'];
-
-  if (sessionToken) {
-    req.flagBridgeSession = sessionToken;
+export default async function globalTeardown() {
+  if (process.env.FLAGBRIDGE_SESSION_ID) {
+    await fb.testing.destroySession(process.env.FLAGBRIDGE_SESSION_ID);
   }
-  next();
-});
+}
 ```
 
 ---
 
 ## Cypress
 
-### Setup
-
-```bash
-pnpm add -D @flagbridge/sdk-node
-```
-
-Create `cypress/support/flags.ts`:
+### Custom commands
 
 ```typescript
-// cypress/support/flags.ts
-import { createTestingClient } from '@flagbridge/sdk-node/testing';
+// cypress/support/commands.ts
+import { FlagBridge } from '@flagbridge/sdk-node';
 
-const testClient = createTestingClient({
-  apiKey: Cypress.env('FLAGBRIDGE_TEST_API_KEY'),
-  baseUrl: Cypress.env('FLAGBRIDGE_BASE_URL') ?? 'http://localhost:8080',
+const fb = new FlagBridge({
+  apiKey: Cypress.env('FLAGBRIDGE_TEST_KEY'),
+  baseUrl: Cypress.env('FLAGBRIDGE_URL') ?? 'http://localhost:8080',
 });
 
-let currentSession: Awaited<ReturnType<typeof testClient.createSession>> | null = null;
+let activeSessionId: string | null = null;
 
-Cypress.Commands.add('createFlagSession', async () => {
-  currentSession = await testClient.createSession();
-  cy.intercept('**', (req) => {
-    req.headers['X-FlagBridge-Session'] = currentSession!.token;
-  });
+Cypress.Commands.add('createFlagSession', (label = 'cypress-session') => {
+  return cy.wrap(
+    fb.testing.createSession({ label }).then((session) => {
+      activeSessionId = session.id;
+      // Attach header to all outgoing requests
+      cy.intercept('**', (req) => {
+        req.headers['X-FlagBridge-Session'] = activeSessionId!;
+      });
+      return session.id;
+    })
+  );
 });
 
 Cypress.Commands.add('overrideFlag', (flagKey: string, value: boolean | string) => {
-  if (!currentSession) throw new Error('Call cy.createFlagSession() first');
-  return cy.wrap(currentSession.override(flagKey, value));
+  if (!activeSessionId) throw new Error('No active session — call cy.createFlagSession() first');
+  return cy.wrap(fb.testing.setOverride(activeSessionId, { flagKey, value }));
 });
 
 Cypress.Commands.add('destroyFlagSession', () => {
-  if (currentSession) {
-    return cy.wrap(currentSession.destroy().then(() => { currentSession = null; }));
+  if (activeSessionId) {
+    return cy.wrap(
+      fb.testing.destroySession(activeSessionId).then(() => {
+        activeSessionId = null;
+      })
+    );
   }
 });
-```
-
-```typescript
-// cypress/support/index.d.ts
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      createFlagSession(): Chainable<void>;
-      overrideFlag(flagKey: string, value: boolean | string): Chainable<void>;
-      destroyFlagSession(): Chainable<void>;
-    }
-  }
-}
 ```
 
 ### Writing tests
@@ -222,7 +204,7 @@ declare global {
 // cypress/e2e/checkout.cy.ts
 describe('Checkout flow', () => {
   beforeEach(() => {
-    cy.createFlagSession();
+    cy.createFlagSession('checkout-test');
   });
 
   afterEach(() => {
@@ -230,115 +212,155 @@ describe('Checkout flow', () => {
   });
 
   it('shows new checkout when flag is enabled', () => {
-    cy.overrideFlag('new-checkout-flow', true);
+    cy.overrideFlag('new-checkout', true);
     cy.visit('/checkout');
-    cy.findByTestId('checkout-v2').should('be.visible');
+    cy.get('[data-testid="checkout-v2"]').should('be.visible');
   });
 
-  it('shows old checkout when flag is disabled', () => {
-    cy.overrideFlag('new-checkout-flow', false);
+  it('shows legacy checkout when flag is disabled', () => {
+    cy.overrideFlag('new-checkout', false);
     cy.visit('/checkout');
-    cy.findByTestId('checkout-v1').should('be.visible');
+    cy.get('[data-testid="checkout-v1"]').should('be.visible');
+  });
+
+  it('applies the correct variant', () => {
+    cy.overrideFlag('checkout-button-color', 'green');
+    cy.visit('/checkout');
+    cy.get('[data-testid="cta-button"]').should('have.class', 'btn-green');
   });
 });
 ```
 
 ---
 
-## Vitest (integration tests)
+## Vitest / Jest
 
-For server-side integration tests, use the testing client directly:
+For unit and integration tests, use the SDK's testing helpers directly — no browser needed.
 
 ```typescript
-// src/checkout/__tests__/checkout.test.ts
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestingClient } from '@flagbridge/sdk-node/testing';
-import { createApp } from '../app';
-import request from 'supertest';
+// checkout.test.ts
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { FlagBridge } from '@flagbridge/sdk-node';
+import { createCheckoutService } from '../checkout-service';
 
-const testClient = createTestingClient({
-  apiKey: process.env.FLAGBRIDGE_TEST_API_KEY!,
-  baseUrl: process.env.FLAGBRIDGE_BASE_URL ?? 'http://localhost:8080',
+const fb = new FlagBridge({
+  apiKey: process.env.FLAGBRIDGE_TEST_KEY!,
+  baseUrl: process.env.FLAGBRIDGE_URL ?? 'http://localhost:8080',
 });
 
-describe('GET /checkout', () => {
-  let session: Awaited<ReturnType<typeof testClient.createSession>>;
+describe('CheckoutService with new-checkout flag', () => {
+  let sessionId: string;
 
-  beforeEach(async () => {
-    session = await testClient.createSession();
+  beforeAll(async () => {
+    const session = await fb.testing.createSession({ label: 'unit-test' });
+    sessionId = session.id;
+    await fb.testing.setOverride(sessionId, { flagKey: 'new-checkout', value: true });
   });
 
-  afterEach(async () => {
-    await session.destroy();
+  afterAll(async () => {
+    await fb.testing.destroySession(sessionId);
   });
 
-  it('renders new checkout when flag is enabled', async () => {
-    await session.override('new-checkout-flow', true);
+  it('evaluates flag as enabled via TEST_OVERRIDE', async () => {
+    const result = await fb.evaluate('new-checkout', {
+      userId: 'test-user',
+      sessionId,
+    });
 
-    const app = createApp();
-    const res = await request(app)
-      .get('/checkout')
-      .set('X-FlagBridge-Session', session.token)
-      .set('Cookie', 'user_id=user-123');
-
-    expect(res.status).toBe(200);
-    expect(res.text).toContain('data-testid="checkout-v2"');
+    expect(result.enabled).toBe(true);
+    expect(result.reason).toBe('TEST_OVERRIDE');
   });
 
-  it('renders old checkout when flag is disabled', async () => {
-    await session.override('new-checkout-flow', false);
+  it('uses new checkout logic when flag is enabled', async () => {
+    const service = createCheckoutService({ flagBridgeSessionId: sessionId });
+    const summary = await service.buildOrderSummary('order-001');
 
-    const app = createApp();
-    const res = await request(app)
-      .get('/checkout')
-      .set('X-FlagBridge-Session', session.token)
-      .set('Cookie', 'user_id=user-123');
-
-    expect(res.status).toBe(200);
-    expect(res.text).toContain('data-testid="checkout-v1"');
+    expect(summary.layout).toBe('v2');
   });
 });
 ```
 
----
+::: tip In-process mocks for pure unit tests
+When you don't want network calls at all, use `FlagBridge.mock()`. It short-circuits evaluation entirely and is safe for CI environments with no running FlagBridge instance.
 
-## CI/CD configuration
+```typescript
+import { FlagBridge } from '@flagbridge/sdk-node';
 
-Add your test API key to your CI environment:
+const fb = FlagBridge.mock({
+  'new-checkout': true,
+  'dark-mode': false,
+});
 
-```yaml
-# GitHub Actions
-env:
-  FLAGBRIDGE_TEST_API_KEY: ${{ secrets.FLAGBRIDGE_TEST_API_KEY }}
-  FLAGBRIDGE_BASE_URL: http://localhost:8080
+const result = await fb.evaluate('new-checkout', { userId: 'test-user' });
+// result.enabled === true, result.reason === 'MOCK_OVERRIDE'
 ```
-
-If using FlagBridge Cloud, point `FLAGBRIDGE_BASE_URL` to your Cloud endpoint — test sessions are isolated per API key, so CI tests never affect production.
-
-```yaml
-# .github/workflows/e2e.yml
-env:
-  FLAGBRIDGE_TEST_API_KEY: ${{ secrets.FLAGBRIDGE_TEST_API_KEY }}
-  FLAGBRIDGE_BASE_URL: https://api.flagbridge.io
-```
-
-::: info
-Test sessions automatically expire after 1 hour. In CI, sessions are created and destroyed per test, so you don't need to worry about cleanup if a test run crashes.
 :::
 
 ---
 
-## Best practices
+## Session management
 
-- **Create one session per test** — sessions are cheap and isolation prevents flaky tests
-- **Only override the flags your test cares about** — other flags evaluate normally
-- **Destroy sessions in `afterEach`** — avoids TTL-based accumulation
-- **Use Test keys in CI** — never use Admin or Live keys in your test pipeline
-- **Test both flag states** — always write tests for both enabled and disabled cases
-- **Use `data-testid` attributes** — makes assertions independent of copy changes
+### TTL and expiry
+
+Sessions expire automatically. The default TTL is **3600 seconds (1 hour)**. You can increase it up to 24 hours at creation time.
+
+::: info CE
+Sessions use the default TTL of 3600s. No TTL customization on creation.
+:::
+
+::: warning Pro
+Pass a custom `ttl` (up to 86400s) when creating a session. Useful for long nightly test runs.
+
+```typescript
+const session = await fb.testing.createSession({
+  projectId: 'my-project-id',
+  label: 'nightly-run',
+  ttl: 28800, // 8 hours
+});
+```
+:::
+
+### Batch overrides
+
+Set multiple overrides in a single API call instead of one request per flag.
+
+::: info CE
+Single override per call: `PUT /v1/testing/sessions/{id}/overrides/{flagKey}`.
+:::
+
+::: warning Pro
+Batch overrides: `PUT /v1/testing/sessions/{id}/overrides/batch` — set all overrides in one request.
+
+```typescript
+await fb.testing.setOverrides(sessionId, {
+  'new-checkout': true,
+  'dark-mode': false,
+  'checkout-button-color': 'green',
+  'free-shipping-banner': true,
+});
+```
+:::
+
+### Auto-cleanup pattern
+
+Always destroy sessions after tests. Leaked sessions accumulate against your quota.
+
+```typescript
+// Safe auto-cleanup helper — destroys the session even if the callback throws
+const result = await fb.testing.withSession(
+  { label: 'scoped-test' },
+  async (session) => {
+    await session.override('new-checkout', true);
+    return runMyTests(session.id);
+  }
+);
+// session is destroyed when the callback resolves or rejects
+```
 
 ---
 
-## Testing API reference
+## Related
 
-See the full [Testing API reference](/api-reference/testing) for all endpoints.
+- [Testing API reference](/api-reference/testing) — full endpoint documentation
+- [Authentication](/api-reference/authentication) — test key scope (`fb_sk_test_*`)
+- [Evaluation](/api-reference/evaluation) — `TEST_OVERRIDE` reason and session header behavior
