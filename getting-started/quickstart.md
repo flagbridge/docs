@@ -49,7 +49,7 @@ docker compose up -d
 Wait a few seconds for the database to initialize, then verify the API is healthy:
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8080/v1/health
 # {"status":"ok"}
 ```
 
@@ -64,7 +64,7 @@ First, authenticate to get a token:
 ```bash
 curl -s -X POST http://localhost:8080/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com", "password": "changeme"}' \
+  -d '{"email": "admin@flagbridge.io", "password": "flagbridge-admin-2026"}' \
   | jq -r '.token'
 ```
 
@@ -73,7 +73,7 @@ Save the token to a shell variable — you'll use it throughout this guide:
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8080/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email": "admin@example.com", "password": "changeme"}' \
+  -d '{"email": "admin@flagbridge.io", "password": "flagbridge-admin-2026"}' \
   | jq -r '.token')
 ```
 :::
@@ -210,6 +210,6 @@ Run `node check-flag.mjs` again and you'll get `Flag enabled: false` — no code
 
 - [Core Concepts](/getting-started/concepts) — understand environments, targeting rules, API key scopes, and evaluation order
 - [Installation](/getting-started/installation) — environment variables reference, Go binary, and Kubernetes deployment
-- [Targeting rules](/guides/targeting) — roll out to specific users or segments
+- [Targeting rules](/guides/targeting-rules) — roll out to specific users or segments
 - [Testing API](/api-reference/testing) — isolate flag state in E2E tests with testing sessions
 - [Self-hosted guide](/guides/self-hosted) — production-ready deployment checklist
