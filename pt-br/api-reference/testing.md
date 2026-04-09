@@ -13,7 +13,7 @@ Esta é a base do suporte a testes E2E do FlagBridge. Veja o [guia de testes E2E
 
 ---
 
-## POST /v1/testing/sessions
+## POST /v1/testing/sessions {#create-session}
 
 Cria uma nova test session.
 
@@ -23,7 +23,7 @@ Authorization: Bearer fb_sk_test_SUA_KEY
 Content-Type: application/json
 ```
 
-### Corpo da requisição
+### Corpo da requisição {#create-session-body}
 
 ```json
 {
@@ -47,7 +47,7 @@ Content-Type: application/json
 Passe qualquer valor de `ttl` entre 1 e 86400 para controlar o tempo de vida da session. Útil para execuções de testes noturnos.
 :::
 
-### Resposta `201 Created`
+### Resposta `201 Created` {#create-session-response}
 
 ```json
 {
@@ -89,7 +89,7 @@ console.log(session.token); // passe no header X-FlagBridge-Session
 
 ---
 
-## GET /v1/testing/sessions/{id}
+## GET /v1/testing/sessions/{id} {#get-session}
 
 Busca o estado atual de uma session, incluindo todos os overrides ativos.
 
@@ -112,7 +112,7 @@ console.log(session.overrides);
 
 :::
 
-### Resposta `200 OK`
+### Resposta `200 OK` {#get-session-response}
 
 ```json
 {
@@ -131,7 +131,7 @@ console.log(session.overrides);
 
 ---
 
-## DELETE /v1/testing/sessions/{id}
+## DELETE /v1/testing/sessions/{id} {#delete-session}
 
 Destrói uma session antes do seu TTL expirar. Sempre chame isso ao final do seu test run para liberar recursos e evitar acúmulo.
 
@@ -153,13 +153,13 @@ await fb.testing.destroySession('sess_abc123');
 
 :::
 
-### Resposta `204 No Content`
+### Resposta `204 No Content` {#delete-session-response}
 
 Após a destruição, qualquer requisição de avaliação que carregue o token da session resolve normalmente (ignorando os overrides).
 
 ---
 
-## PUT /v1/testing/sessions/{id}/overrides/{flagKey}
+## PUT /v1/testing/sessions/{id}/overrides/{flagKey} {#set-override}
 
 Define ou atualiza o override de uma flag específica em uma session. Se a flag já tem um override, ele é substituído.
 
@@ -169,7 +169,7 @@ Authorization: Bearer fb_sk_test_SUA_KEY
 Content-Type: application/json
 ```
 
-### Corpo da requisição
+### Corpo da requisição {#set-override-body}
 
 ```json
 {
@@ -206,7 +206,7 @@ await fb.testing.setOverride('sess_abc123', {
 
 :::
 
-### Resposta `200 OK`
+### Resposta `200 OK` {#set-override-response}
 
 ```json
 {
@@ -219,7 +219,7 @@ await fb.testing.setOverride('sess_abc123', {
 
 ---
 
-## PUT /v1/testing/sessions/{id}/overrides/batch
+## PUT /v1/testing/sessions/{id}/overrides/batch {#batch-overrides}
 
 Define múltiplos overrides em uma única requisição.
 
@@ -233,7 +233,7 @@ Authorization: Bearer fb_sk_test_SUA_KEY
 Content-Type: application/json
 ```
 
-### Corpo da requisição
+### Corpo da requisição {#batch-overrides-body}
 
 ```json
 {
@@ -273,7 +273,7 @@ await fb.testing.setOverrides('sess_abc123', {
 
 :::
 
-### Resposta `200 OK`
+### Resposta `200 OK` {#batch-overrides-response}
 
 ```json
 {
@@ -288,7 +288,7 @@ await fb.testing.setOverrides('sess_abc123', {
 
 ---
 
-## DELETE /v1/testing/sessions/{id}/overrides/{flagKey}
+## DELETE /v1/testing/sessions/{id}/overrides/{flagKey} {#delete-override}
 
 Remove o override de uma flag específica de uma session. Após a remoção, essa flag avalia normalmente para requisições que usam este token de session.
 
@@ -310,7 +310,7 @@ await fb.testing.deleteOverride('sess_abc123', 'new-checkout');
 
 :::
 
-### Resposta `204 No Content`
+### Resposta `204 No Content` {#delete-override-response}
 
 ---
 

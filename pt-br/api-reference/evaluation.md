@@ -21,7 +21,7 @@ Authorization: Bearer fb_sk_eval_SUA_KEY
 Content-Type: application/json
 ```
 
-### Corpo da requisição
+### Corpo da requisição {#evaluate-body}
 
 ```json
 {
@@ -41,7 +41,7 @@ Content-Type: application/json
 | `context` | object | Não | Atributos de contexto da avaliação (qualquer par chave-valor) |
 | `context.userId` | string | Não | Identificador único do usuário — necessário para bucketing consistente em rollouts por percentual |
 
-### Resposta `200 OK`
+### Resposta `200 OK` {#evaluate-response}
 
 ```json
 {
@@ -104,7 +104,7 @@ Authorization: Bearer fb_sk_eval_SUA_KEY
 Content-Type: application/json
 ```
 
-### Corpo da requisição
+### Corpo da requisição {#batch-evaluate-body}
 
 ```json
 {
@@ -121,7 +121,7 @@ Content-Type: application/json
 | `flags` | string[] | Sim | Array de keys de flags para avaliar (máx: 50 por requisição) |
 | `context` | object | Não | Contexto de avaliação aplicado a todas as flags do batch |
 
-### Resposta `200 OK`
+### Resposta `200 OK` {#batch-evaluate-response}
 
 ```json
 {

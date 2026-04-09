@@ -57,7 +57,7 @@ const flag = await adminClient.flags.create('my-app', {
 
 :::
 
-### Request body
+### Request body {#create-flag-body}
 
 | Field | Type | Required | Description |
 |---|---|---|---|
@@ -66,7 +66,7 @@ const flag = await adminClient.flags.create('my-app', {
 | `description` | string | No | Optional description |
 | `variants` | array | No | Variant definitions for multi-variant flags |
 
-### Response `201 Created`
+### Response `201 Created` {#create-flag-response}
 
 ```json
 {
@@ -111,7 +111,7 @@ const { flags, total } = await adminClient.flags.list('my-app');
 | `page` | number | Page number (default: 1) |
 | `perPage` | number | Results per page (default: 20, max: 100) |
 
-### Response `200 OK`
+### Response `200 OK` {#list-flags-response}
 
 ```json
 {
@@ -151,7 +151,7 @@ const flag = await adminClient.flags.get('my-app', 'new-checkout-flow');
 
 :::
 
-### Response `200 OK`
+### Response `200 OK` {#get-flag-response}
 
 Returns the full [flag object](#flag-object) including targeting rules.
 
@@ -196,7 +196,7 @@ const updated = await adminClient.flags.update('my-app', 'new-checkout-flow', {
 Sending `rules` in a PATCH request replaces all existing targeting rules. To add a single rule, first GET the current rules, append your new rule, then PATCH the full array.
 :::
 
-### Response `200 OK`
+### Response `200 OK` {#update-flag-response}
 
 Returns the updated flag object.
 
@@ -221,7 +221,7 @@ await adminClient.flags.delete('my-app', 'new-checkout-flow');
 
 :::
 
-### Response `204 No Content`
+### Response `204 No Content` {#delete-flag-response}
 
 This action is irreversible. All flag evaluations for deleted flags return `{ "enabled": false, "reason": "FLAG_NOT_FOUND" }`.
 
@@ -264,14 +264,14 @@ await adminClient.flags.setState('my-app', 'new-checkout-flow', 'production', {
 
 :::
 
-### Request body
+### Request body {#set-state-body}
 
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `enabled` | boolean | Yes | Whether the flag is active in this environment |
 | `rolloutPercentage` | number \| null | No | Percentage of users to receive the flag (0–100). `null` means all users |
 
-### Response `200 OK`
+### Response `200 OK` {#set-state-response}
 
 ```json
 {
@@ -304,7 +304,7 @@ const state = await adminClient.flags.getState('my-app', 'new-checkout-flow', 'p
 
 :::
 
-### Response `200 OK`
+### Response `200 OK` {#get-state-response}
 
 ```json
 {
