@@ -79,6 +79,12 @@ export default defineConfig({
               { text: 'Slack', link: '/integrations/slack' },
             ],
           },
+          {
+            text: 'Compare',
+            items: [
+              { text: 'vs LaunchDarkly', link: '/compare/vs-launchdarkly' },
+            ],
+          },
         ],
       },
     },
@@ -151,6 +157,12 @@ export default defineConfig({
               { text: 'Segment', link: '/pt-br/integrations/segment' },
               { text: 'Datadog', link: '/pt-br/integrations/datadog' },
               { text: 'Slack', link: '/pt-br/integrations/slack' },
+            ],
+          },
+          {
+            text: 'Compare',
+            items: [
+              { text: 'vs LaunchDarkly', link: '/pt-br/compare/vs-launchdarkly' },
             ],
           },
         ],
