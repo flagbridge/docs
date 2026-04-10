@@ -210,6 +210,6 @@ Execute `node check-flag.mjs` novamente e você verá `Flag enabled: false` — 
 
 - [Conceitos Fundamentais](/pt-br/getting-started/concepts) — entenda environments, regras de targeting, escopos de API key e a ordem de avaliação
 - [Instalação](/pt-br/getting-started/installation) — referência de variáveis de ambiente, binário Go e deployment no Kubernetes
-- [Regras de targeting](/pt-br/guides/targeting) — faça rollout para usuários ou segmentos específicos
+- [Regras de targeting](/pt-br/guides/targeting-rules) — faça rollout para usuários ou segmentos específicos
 - [Testing API](/pt-br/api-reference/testing) — isole o estado das flags em testes E2E com testing sessions
 - [Guia self-hosted](/pt-br/guides/self-hosted) — checklist de deployment para produção

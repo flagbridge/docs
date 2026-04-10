@@ -34,6 +34,7 @@ export default defineConfig({
               { text: 'E2E Testing', link: '/guides/testing-e2e' },
               { text: 'Webhooks', link: '/guides/webhooks' },
               { text: 'Migrations', link: '/guides/migrations' },
+              { text: 'Self-Hosted', link: '/guides/self-hosted' },
             ],
           },
           {
@@ -114,6 +115,7 @@ export default defineConfig({
               { text: 'Testes E2E', link: '/pt-br/guides/testing-e2e' },
               { text: 'Webhooks', link: '/pt-br/guides/webhooks' },
               { text: 'Migrações', link: '/pt-br/guides/migrations' },
+              { text: 'Self-Hosted', link: '/pt-br/guides/self-hosted' },
             ],
           },
           {
